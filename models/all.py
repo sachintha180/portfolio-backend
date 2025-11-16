@@ -3,8 +3,9 @@ from datetime import date
 from sqlmodel import Field
 from pydantic import EmailStr
 from sqlalchemy import CheckConstraint, UniqueConstraint
+
 from models.base import TimestampedModel
-from models.enums import UserType, SubjectCode, SyllabusLevel, FileType
+from custom_types.enums import UserType, SubjectCode, SyllabusLevel, FileType
 
 
 class User(TimestampedModel, table=True):
@@ -26,7 +27,9 @@ class Syllabus(TimestampedModel, table=True):
 
 
 class UserSyllabus(TimestampedModel, table=True):
-    # NOTE: Admins will have access to all syllabuses
+    # NOTE: Admins will have access to all syllabi
+
+    # Constrants
     __table_args__ = (
         UniqueConstraint("user_id", "syllabus_id", name="uq_user_syllabus"),
     )
@@ -37,6 +40,7 @@ class UserSyllabus(TimestampedModel, table=True):
 
 
 class Test(TimestampedModel, table=True):
+    # Constrants
     __table_args__ = (
         CheckConstraint("total_marks >= 0", name="ck_test_total_marks_positive"),
         CheckConstraint("duration >= 0", name="ck_test_duration_positive"),
@@ -54,6 +58,7 @@ class Test(TimestampedModel, table=True):
 
 
 class Result(TimestampedModel, table=True):
+    # Constrants
     __table_args__ = (CheckConstraint("score >= 0", name="ck_result_score_positive"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
