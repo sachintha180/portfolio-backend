@@ -3,11 +3,12 @@ from datetime import datetime
 from uuid import UUID
 from sqlmodel import Session, select
 
-from models.all import User
-from custom_types.user import UserCreate, UserUpdate
+from models.user import User
+from schemas.user import UserCreate, UserUpdate
+from core.interfaces import UserInterface
 
 
-class UserDatabase:
+class UserDatabase(UserInterface):
     @staticmethod
     async def create_user(session: Session, user_data: UserCreate) -> User:
         user = User(
