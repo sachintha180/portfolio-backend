@@ -1,7 +1,13 @@
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+import uvicorn
+
+# NOTE: Load environment variables before importing modules that use them
+load_dotenv(".env.local")
+
 from fastapi import FastAPI
-from config.database import create_db_and_tables
 from routes import api_router
+from config.database import create_db_and_tables
 
 
 @asynccontextmanager
@@ -26,3 +32,7 @@ app.include_router(api_router, prefix="/api")
 def index():
     """Root endpoint."""
     return {"message": "Portfolio Backend API", "version": "1.0.0"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
