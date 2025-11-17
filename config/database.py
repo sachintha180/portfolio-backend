@@ -1,8 +1,10 @@
+import os
 from typing import Generator
 from sqlmodel import SQLModel, Session, create_engine
 
-# TODO: Replace with actual database URL from environment variable
-DATABASE_URL = "sqlite:///./database.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set")
 
 engine = create_engine(
     DATABASE_URL, echo=True, connect_args={"check_same_thread": False}
