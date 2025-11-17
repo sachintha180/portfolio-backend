@@ -17,12 +17,11 @@ from custom_types.exceptions import (
 )
 
 JWT_SECRET = os.getenv("JWT_SECRET")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-JWT_EXPIRATION = int(os.getenv("JWT_EXPIRATION", "3600"))
-
-
 if not JWT_SECRET:
     raise ValueError("JWT_SECRET environment variable is not set")
+
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRATION = int(os.getenv("JWT_EXPIRATION", "3600"))
 
 
 class AuthService:

@@ -1,71 +1,28 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from config.database import create_db_and_tables
 from routes import api_router
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Lifespan event handler for startup and shutdown."""
+    create_db_and_tables()
+    yield
+
 
 app = FastAPI(
     title="Portfolio Backend API",
     description="Backend API for portfolio and CS class management",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
-# Create database tables on startup
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
 
-
-# Include API routes
 app.include_router(api_router, prefix="/api")
 
 
 @app.get("/")
-def read_root():
+def index():
+    """Root endpoint."""
     return {"message": "Portfolio Backend API", "version": "1.0.0"}
-
-
-# hero_1 = Hero(name="Deadpond", secret_name="Dive Wilson")
-# hero_2 = Hero(name="Spider-Boy", secret_name="Pedro Parqueador")
-# hero_3 = Hero(name="Rusty-Man", secret_name="Tommy Sharp", age=48)
-
-
-# engine = create_engine("sqlite:///database.db")
-
-
-# SQLModel.metadata.create_all(engine)
-
-# with Session(engine) as session:
-#     session.add(hero_1)
-#     session.add(hero_2)
-#     session.add(hero_3)
-#     session.commit()
-
-
-# with Session(engine) as session:
-#     statement = select(Hero).where(Hero.name == "Spider-Boy")
-#     hero = session.exec(statement).first()
-#     print(hero)
-
-
-# from typing import Generator
-# from sqlmodel import SQLModel, Session, create_engine
-# from fastapi import Depends
-
-# # TODO: Replace with actual database URL from environment variable
-# DATABASE_URL = "sqlite:///./database.db"
-
-# engine = create_engine(DATABASE_URL, echo=True, connect_args={"check_same_thread": False})
-
-
-# def create_db_and_tables():
-#     """Create database tables."""
-#     SQLModel.metadata.create_all(engine)
-
-
-# def get_session() -> Generator[Session, None, None]:
-#     """FastAPI dependency factory for database sessions."""
-#     with Session(engine) as session:
-#         yield session
-
-
-# # Type alias for dependency injection
-# SessionDep = Depends(get_session)
