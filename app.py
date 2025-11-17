@@ -1,17 +1,26 @@
-from typing import Union
 from fastapi import FastAPI
+from config.database import create_db_and_tables
+from routes import api_router
 
-app = FastAPI()
+app = FastAPI(
+    title="Portfolio Backend API",
+    description="Backend API for portfolio and CS class management",
+    version="1.0.0",
+)
+
+# Create database tables on startup
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+
+# Include API routes
+app.include_router(api_router, prefix="/api")
 
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+    return {"message": "Portfolio Backend API", "version": "1.0.0"}
 
 
 # hero_1 = Hero(name="Deadpond", secret_name="Dive Wilson")
