@@ -1,18 +1,49 @@
-class BaseAppException(Exception):
-    def __init__(self, message: str):
-        self.message = message
-        super().__init__(self.message)
+from fastapi import HTTPException, status
 
 
-class UserNotFoundError(BaseAppException):
-    def __init__(self, user_id: str | None = None):
-        message = "User not found"
-        if user_id:
-            message = f"User with ID '{user_id}' not found"
-        super().__init__(message)
+class UserNotFoundError(HTTPException):
+    def __init__(self, detail: str = "User not found"):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=detail,
+        )
 
 
-class DuplicateEmailError(BaseAppException):
-    def __init__(self, email: str):
-        message = f"User with email '{email}' already exists"
-        super().__init__(message)
+class EmailAlreadyExistsError(HTTPException):
+    def __init__(self, detail: str = "Email already in use"):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail,
+        )
+
+
+class InvalidCredentialsError(HTTPException):
+    def __init__(self, detail: str = "Invalid credentials"):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=detail,
+        )
+
+
+class InvalidTokenError(HTTPException):
+    def __init__(self, detail: str = "Invalid or expired token"):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=detail,
+        )
+
+
+class RegistrationError(HTTPException):
+    def __init__(self, detail: str = "Registration failed"):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail,
+        )
+
+
+class DatabaseError(HTTPException):
+    def __init__(self, detail: str = "Database operation failed"):
+        super().__init__(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=detail,
+        )
