@@ -28,3 +28,8 @@ class FileType(str, Enum):
     CODE = "code"
     EXERCISE = "exercise"
     TEST = "test"
+
+
+class TokenType(str, Enum):
+    ACCESS = "access"
+    REFRESH = "refresh"
