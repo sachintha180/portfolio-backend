@@ -1,4 +1,3 @@
-import os
 import jwt
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
@@ -6,7 +5,7 @@ from sqlmodel import Session
 
 from models.user import User
 from database.user import UserDatabase
-from schemas.auth import AuthPayload, AuthRegister
+from schemas.auth import TokenPayload, AuthRegisterRequest
 from services.password import PasswordService
 from custom_types.exceptions import (
     UserNotFoundError,
@@ -14,14 +13,15 @@ from custom_types.exceptions import (
     InvalidCredentialsError,
     InvalidTokenError,
     RegistrationError,
+    NotAuthenticatedError,
 )
-
-JWT_SECRET = os.getenv("JWT_SECRET")
-if not JWT_SECRET:
-    raise ValueError("JWT_SECRET environment variable is not set")
-
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-JWT_EXPIRATION = int(os.getenv("JWT_EXPIRATION", "3600"))
+from custom_types.enums import TokenType
+from config.auth import (
+    JWT_SECRET,
+    JWT_ALGORITHM,
+    COOKIE_MAX_AGE_ACCESS,
+    COOKIE_MAX_AGE_REFRESH,
+)
 
 
 class AuthService:
@@ -31,7 +31,7 @@ class AuthService:
         """Initialize AuthService with a database dependency."""
         self.db = db
 
-    def _verify_token(self, token: str) -> AuthPayload:
+    def _verify_token(self, token: str) -> TokenPayload:
         """Verify and decode a JWT token."""
         try:
             payload = jwt.decode(
@@ -39,19 +39,24 @@ class AuthService:
                 JWT_SECRET,
                 algorithms=[JWT_ALGORITHM],
             )
-            return AuthPayload(**payload)
+            return TokenPayload(**payload)
         except jwt.ExpiredSignatureError:
             raise InvalidTokenError("Token has expired")
         except jwt.InvalidTokenError:
             raise InvalidTokenError("Invalid token")
 
-    def create_access_token(self, user: User) -> str:
-        """Create an access token for a user."""
-        payload = AuthPayload(
+    def create_token(self, user: User, token_type: TokenType) -> str:
+        """Create an access / refresh token for a user."""
+        expiration_time = (
+            COOKIE_MAX_AGE_ACCESS
+            if token_type == TokenType.ACCESS
+            else COOKIE_MAX_AGE_REFRESH
+        )
+        payload = TokenPayload(
             sub=str(user.id),
             email=user.email,
             type=user.type,
-            exp=datetime.now(timezone.utc) + timedelta(seconds=JWT_EXPIRATION),
+            exp=datetime.now(timezone.utc) + timedelta(seconds=expiration_time),
         )
         return jwt.encode(
             payload.model_dump(),
@@ -59,7 +64,7 @@ class AuthService:
             algorithm=JWT_ALGORITHM,
         )
 
-    def register(self, session: Session, user_data: AuthRegister) -> User:
+    def register(self, session: Session, user_data: AuthRegisterRequest) -> User:
         """Register a new user."""
         existing_user = self.db.get_user_by_email(session, user_data.email)
         if existing_user:
@@ -85,8 +90,11 @@ class AuthService:
 
         return user
 
-    def get_current_user(self, session: Session, token: str) -> User:
-        """Get the current user from a JWT token."""
+    def verify_authentication(self, session: Session, token: str | None) -> User:
+        """Verify authentication token and return the authenticated user."""
+        if not token:
+            raise NotAuthenticatedError("Not authenticated")
+
         payload = self._verify_token(token)
 
         user = self.db.get_user_by_id(session, UUID(payload.sub))

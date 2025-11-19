@@ -2,7 +2,7 @@ from uuid import UUID
 from sqlmodel import Session
 
 from models.user import User
-from schemas.user import UserUpdate
+from schemas.user import UserUpdateRequest
 from database.user import UserDatabase
 from custom_types.exceptions import (
     UserNotFoundError,
@@ -23,10 +23,11 @@ class UserService:
         user = self.db.get_user_by_id(session, user_id)
         if not user:
             raise UserNotFoundError("User not found")
+
         return user
 
     def update_user(
-        self, session: Session, user_id: UUID, user_data: UserUpdate
+        self, session: Session, user_id: UUID, user_data: UserUpdateRequest
     ) -> User:
         """Update a user with validation."""
         user = self.db.get_user_by_id(session, user_id)
