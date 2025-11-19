@@ -18,5 +18,5 @@ def create_db_and_tables():
 
 def get_db_session() -> Generator[Session, None, None]:
     """Dependency factory for database sessions."""
-    with Session(engine) as session:
-        yield session
+    with Session(engine) as db_session:
+        yield db_session

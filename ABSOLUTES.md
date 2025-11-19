@@ -1,0 +1,226 @@
+# ABSOLUTES - Backend Development Rules
+
+This document defines the absolute rules that must be followed when developing the backend API. These rules are non-negotiable and must be adhered to at all times.
+
+---
+
+## Rule 1: No Unnecessary Data Returns
+
+**Principle:** Routes should not return unnecessary data. Only return data that is absolutely necessary for the client.
+
+**Examples:**
+
+- **Good:** Return user data after registration/login (necessary)
+- **Good:** Return verification data from `/auth/verify` (necessary)
+- **Good:** No return body for DELETE operations (204 No Content)
+- **Bad:** Return success messages like `{"message": "Operation successful"}`
+
+**Implementation:**
+
+- If an operation succeeds but doesn't need to return data, use `204 No Content` status code
+- Only return data that the frontend/client actually needs
+
+---
+
+## Rule 2: Request/Response Schema Suffix
+
+**Principle:** All route data schemas must be suffixed with `Request` or `Response` respectively.
+
+**Examples:**
+
+- **Good:** `AuthLoginRequest`, `AuthLoginResponse`
+- **Good:** `UserUpdateRequest`, `GetUserResponse`
+- **Bad:** `AuthLogin`, `UserUpdate` (without suffix)
+
+**Implementation:**
+
+- Request schemas: `{RouteName}Request` (e.g., `AuthRegisterRequest`)
+- Response schemas: `{RouteName}Response` (e.g., `AuthRegisterResponse`)
+- Nested schemas used within responses don't need Request/Response suffix (e.g., `AuthVerifyUser`)
+
+---
+
+## Rule 3: Explicit Status Codes
+
+**Principle:** All routes must have an explicit status code defined.
+
+**Examples:**
+
+- **Good:** `status_code=status.HTTP_200_OK`
+- **Good:** `status_code=status.HTTP_201_CREATED`
+- **Good:** `status_code=status.HTTP_204_NO_CONTENT`
+- **Bad:** Relying on FastAPI defaults without explicit declaration
+
+**Implementation:**
+
+- Always include `status_code` parameter in route decorator
+- Use appropriate HTTP status codes for each operation
+
+---
+
+## Rule 4: No HTTPExceptions in Routes
+
+**Principle:** Routes must not directly raise HTTPExceptions. All complex business logic and exception handling must be handled in services. All exceptions must be defined in `custom_types/exceptions.py`.
+
+**Examples:**
+
+- **Good:** Route calls `auth_service.verify_authentication()` which raises `NotAuthenticatedError`
+- **Bad:** Route directly raises `HTTPException(status_code=401, detail="Not authenticated")`
+
+**Implementation:**
+
+- Routes should be thin - they call services and return responses
+- Services contain all business logic and raise appropriate exceptions
+- All custom exceptions inherit from `HTTPException` and are defined in `custom_types/exceptions.py`
+- Dependencies can call services but should not raise exceptions directly
+
+---
+
+## Rule 5: No Imports in Middle of Code
+
+**Principle:** Absolutely no importing in the middle of your code, unless it breaks the program. All imports must be made at the top of the code file.
+
+**Examples:**
+
+- **Good:** All imports at top of file
+- **Bad:** `from fastapi import HTTPException` inside a function
+- **Bad:** `import os` in the middle of a class method
+
+**Implementation:**
+
+- All imports go at the top of the file
+- Group imports: standard library, third-party, local imports
+- Only exception: circular import issues that genuinely break the program
+
+---
+
+## Rule 6: No Bundled Dependency Factories
+
+**Principle:** Don't build any bundled dependency factories. Use individual dependencies instead.
+
+**Examples:**
+
+- **Good:** `get_current_user()` dependency that returns `User`
+- **Good:** Routes use `current_user: CurrentUserDep` and `session: DBSessionDep` separately
+- **Bad:** `get_authenticated_context()` that returns a NamedTuple with both user and session
+
+**Implementation:**
+
+- Each dependency should return a single, focused value
+- Routes can use multiple dependencies if needed
+- Avoid creating wrapper dependencies that bundle multiple values
+
+---
+
+## Rule 7: Route Schema Naming Convention
+
+**Principle:** Route schemas must follow the pattern `<service><method><Response/Request>`. The service name comes from the route prefix, the method is the HTTP verb (capitalized), and it ends with Request or Response. Internal/non-route schemas in the same file should be given different names (e.g., `TokenPayload` in `auth.py`).
+
+**Examples:**
+
+- **Good:** `/auth/login` POST → `AuthLoginRequest`, `AuthLoginResponse`
+- **Good:** `/auth/register` POST → `AuthRegisterRequest`, `AuthRegisterResponse`
+- **Good:** `/users/{user_id}` GET → `UserGetResponse`
+- **Good:** `/users/{user_id}` PATCH → `UserUpdateRequest`, `UserUpdateResponse`
+- **Good:** Internal schema in `auth.py` → `TokenPayload` (not `AuthTokenPayload`)
+- **Bad:** `/users/{user_id}` GET → `GetUserResponse` (wrong order)
+- **Bad:** `/auth/login` → `LoginRequest` (missing service prefix)
+
+**Implementation:**
+
+- Pattern: `<Service><Method><Request/Response>`
+- Service: Route prefix capitalized (`/auth` → `Auth`, `/users` → `User`)
+- Method: HTTP verb capitalized (`GET` → `Get`, `POST` → `Post`, `PATCH` → `Update`, `DELETE` → `Delete`)
+- Type: `Request` for request bodies, `Response` for responses
+- Internal/non-route schemas get descriptive names without service prefix
+- Keep schemas organized by route group in schema files
+
+---
+
+## Rule 8: Code Spacing and Formatting
+
+**Principle:** There must be one blank line ALWAYS between the method body and the return statement. The remaining blocks of code must be spaced out semantically.
+
+**Examples:**
+
+```python
+# Good
+def example_function():
+    # Method body logic
+    result = some_operation()
+
+    return result
+
+# Bad - no blank line before return
+def example_function():
+    result = some_operation()
+    return result
+
+# Good - semantic spacing
+def complex_function():
+    # First logical block
+    user = get_user()
+
+    # Second logical block
+    if user:
+        process_user(user)
+
+    # Return statement
+    return user
+```
+
+**Implementation:**
+
+- Always have one blank line before `return` statement
+- Group related code blocks together
+- Separate logical sections with blank lines
+- Maintain consistent spacing throughout the codebase
+
+---
+
+## Rule 9: Parameter Naming Convention
+
+**Principle:** Parameters must be prefixed with appropriate names suiting their use case. Generic names like `service` or `session` are not allowed. This applies to all layers: routes, services, and database.
+
+**Examples:**
+
+- **Good:** `auth_service: AuthServiceDep`, `user_service: UserServiceDep`
+- **Good:** `db_session: DBSessionDep` (in routes)
+- **Good:** `db_session: Session` (in services and database layer)
+- **Good:** `request_data: AuthLoginRequest`
+- **Bad:** `service: AuthServiceDep` (too generic)
+- **Bad:** `session: DBSessionDep` or `session: Session` (too generic, must be `db_session`)
+- **Bad:** `data: AuthLoginRequest` (too generic)
+
+**Implementation:**
+
+- Service dependencies: Prefix with service type (`auth_service`, `user_service`)
+- Database session: **Always** prefix with `db_` (`db_session`) in routes, services, and database layer
+- Request data: Use descriptive name (`request_data`, `user_data`)
+- Request object: Use `request: Request`
+- Response object: Use `response: Response`
+- All parameters should clearly indicate their purpose and type
+- Consistency across all layers: routes, services, and database must all use `db_session` for database session parameters
+
+---
+
+## Rule 10: Router-Level Dependencies
+
+**Principle:** When all routes in a router share the same dependencies, use router-level dependencies instead of declaring them individually in each route function.
+
+**Examples:**
+
+- **Good:** Router with `dependencies=[Depends(get_authenticated_user), Depends(get_user_service)]` when all routes need authentication and user service
+- **Good:** Route handlers still declare dependencies as parameters if they need to use the resolved values
+- **Good:** Router-level dependencies handle side effects (like authentication checks) automatically
+- **Bad:** Declaring the same three dependencies in every route function when they're shared across all routes
+- **Bad:** Using router-level dependencies but still declaring unused dependencies in function signatures
+
+**Implementation:**
+
+- Use `dependencies` parameter in `APIRouter()` constructor when dependencies are shared across all routes
+- Router-level dependencies run automatically for all routes in that router
+- Still declare dependencies as function parameters if you need to use the resolved values
+- Remove unused dependencies from function signatures if they're only needed for side effects (like authentication protection)
+- Router-level dependencies are perfect for authentication, authorization, and other shared checks
+- This reduces code repetition and follows DRY principles

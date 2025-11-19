@@ -1,6 +1,5 @@
-from typing import Annotated, NamedTuple
-from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Annotated
+from fastapi import Depends, Request
 from sqlmodel import Session
 
 from database.user import UserDatabase
@@ -8,16 +7,7 @@ from services.user import UserService
 from services.auth import AuthService
 from models.user import User
 from config.database import get_db_session
-
-security = HTTPBearer()
-
-
-# Dependency context types
-class AuthenticatedContext(NamedTuple):
-    """Bundled dependencies for authenticated routes."""
-
-    current_user: User
-    session: Session
+from config.auth import ACCESS_TOKEN_COOKIE_NAME
 
 
 # Dependency factories
@@ -40,23 +30,11 @@ def get_auth_service(
     return AuthService(db=db)
 
 
-def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+def get_authenticated_user(
+    request: Request,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-    session: Annotated[Session, Depends(get_db_session)],
+    db_session: Annotated[Session, Depends(get_db_session)],
 ) -> User:
-    """Dependency that verifies JWT token and returns the current authenticated user."""
-    token = credentials.credentials
-    return auth_service.get_current_user(session, token)
-
-
-# Bundled dependency factories
-def get_authenticated_context(
-    current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[Session, Depends(get_db_session)],
-) -> AuthenticatedContext:
-    """Bundled dependency for authenticated routes that need user and session."""
-    return AuthenticatedContext(
-        current_user=current_user,
-        session=session,
-    )
+    """Dependency that verifies JWT token from HTTP-only cookie and returns the current authenticated user."""
+    token = request.cookies.get(ACCESS_TOKEN_COOKIE_NAME)
+    return auth_service.verify_authentication(db_session, token)
