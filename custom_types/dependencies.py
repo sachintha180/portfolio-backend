@@ -9,9 +9,7 @@ from config.database import get_db_session
 from api.dependencies import (
     get_user_service,
     get_auth_service,
-    get_current_user,
-    get_authenticated_context,
-    AuthenticatedContext,
+    get_authenticated_user,
 )
 
 
@@ -19,7 +17,4 @@ from api.dependencies import (
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 DBSessionDep = Annotated[Session, Depends(get_db_session)]
-CurrentUserDep = Annotated[User, Depends(get_current_user)]
-AuthenticatedContextDep = Annotated[
-    AuthenticatedContext, Depends(get_authenticated_context)
-]
+AuthenticatedUserDep = Annotated[User, Depends(get_authenticated_user)]
