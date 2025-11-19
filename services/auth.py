@@ -64,24 +64,24 @@ class AuthService:
             algorithm=JWT_ALGORITHM,
         )
 
-    def register(self, session: Session, user_data: AuthRegisterRequest) -> User:
+    def register(self, db_session: Session, user_data: AuthRegisterRequest) -> User:
         """Register a new user."""
-        existing_user = self.db.get_user_by_email(session, user_data.email)
+        existing_user = self.db.get_user_by_email(db_session, user_data.email)
         if existing_user:
             raise EmailAlreadyExistsError("Email already in use")
 
         hashed_password = PasswordService.hash_password(user_data.password)
 
         try:
-            user = self.db.create_user(session, user_data, hashed_password)
+            user = self.db.create_user(db_session, user_data, hashed_password)
         except Exception as e:
             raise RegistrationError("Failed to register user") from e
 
         return user
 
-    def login(self, session: Session, email: str, password: str) -> User:
+    def login(self, db_session: Session, email: str, password: str) -> User:
         """Authenticate a user."""
-        user = self.db.get_user_by_email(session, email)
+        user = self.db.get_user_by_email(db_session, email)
         if not user:
             raise InvalidCredentialsError("Invalid email or password")
 
@@ -90,14 +90,14 @@ class AuthService:
 
         return user
 
-    def verify_authentication(self, session: Session, token: str | None) -> User:
+    def verify_authentication(self, db_session: Session, token: str | None) -> User:
         """Verify authentication token and return the authenticated user."""
         if not token:
             raise NotAuthenticatedError("Not authenticated")
 
         payload = self._verify_token(token)
 
-        user = self.db.get_user_by_id(session, UUID(payload.sub))
+        user = self.db.get_user_by_id(db_session, UUID(payload.sub))
         if not user:
             raise UserNotFoundError("User not found")
 
