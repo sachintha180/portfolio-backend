@@ -8,7 +8,7 @@ from custom_types.dependencies import AuthenticatedContextDep, UserServiceDep
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/get/{user_id}", response_model=User)
+@router.get("/{user_id}", response_model=User)
 def get_user(
     user_id: UUID,
     service: UserServiceDep,
@@ -18,7 +18,7 @@ def get_user(
     return service.get_user_by_id(ctx.session, user_id)
 
 
-@router.patch("/update/{user_id}", response_model=User)
+@router.patch("/{user_id}", response_model=User)
 def update_user(
     user_id: UUID,
     user_data: UserUpdate,
@@ -30,7 +30,7 @@ def update_user(
 
 
 @router.delete(
-    "/delete/{user_id}", status_code=status.HTTP_204_NO_CONTENT
+    "/{user_id}", status_code=status.HTTP_204_NO_CONTENT
 )  # NOTE: Returns 204 because there's no response body
 def delete_user(
     user_id: UUID,
