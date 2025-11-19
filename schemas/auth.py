@@ -1,15 +1,28 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from uuid import UUID
 
 from custom_types.enums import UserType
+from models.user import User
 
 
-class AuthLogin(BaseModel):
+class TokenPayload(BaseModel):
+    sub: str
+    email: EmailStr
+    type: UserType
+    exp: datetime
+
+
+class AuthLoginRequest(BaseModel):
     email: EmailStr
     password: str
 
 
-class AuthRegister(BaseModel):
+class AuthLoginResponse(BaseModel):
+    user: User
+
+
+class AuthRegisterRequest(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
@@ -17,12 +30,18 @@ class AuthRegister(BaseModel):
     type: UserType
 
 
-class AuthPayload(BaseModel):
-    sub: str
+class AuthRegisterResponse(BaseModel):
+    user: User
+
+
+class AuthVerifyUser(BaseModel):
+    id: UUID
     email: EmailStr
+    first_name: str
+    last_name: str
     type: UserType
-    exp: datetime
 
 
-class AuthToken(BaseModel):
-    access_token: str
+class AuthVerifyResponse(BaseModel):
+    authenticated: bool
+    user: AuthVerifyUser
