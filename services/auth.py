@@ -2,7 +2,6 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from sqlmodel import Session
-from typing import Optional
 
 from models import User
 
@@ -13,6 +12,8 @@ from custom_types.exceptions import (
     InvalidCredentialsError,
     InvalidTokenError,
     RegistrationError,
+    NotAuthenticatedError,
+    UserNotFoundError,
 )
 from custom_types.enums import TokenType
 from config.auth import (
@@ -91,17 +92,15 @@ class AuthService:
 
         return user
 
-    def verify_authentication(
-        self, db_session: Session, token: str | None
-    ) -> Optional[User]:
+    def verify_authentication(self, db_session: Session, token: str | None) -> User:
         """Verify authentication token and return the authenticated user or None if not authenticated."""
         if not token:
-            return None
+            raise NotAuthenticatedError
 
         payload = self._verify_token(token)
 
         user = self.db.get_user_by_id(db_session, UUID(payload.sub))
         if not user:
-            return None
+            raise UserNotFoundError
 
         return user
