@@ -1,7 +1,8 @@
 from uuid import UUID
 from sqlmodel import Session
 
-from models.user import User
+from models import User
+
 from schemas.user import UserUpdateRequest
 from database.user import UserDatabase
 from custom_types.exceptions import (
@@ -22,7 +23,7 @@ class UserService:
         """Get a user by ID."""
         user = self.db.get_user_by_id(db_session, user_id)
         if not user:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError
 
         return user
 
@@ -32,12 +33,12 @@ class UserService:
         """Update a user with validation."""
         user = self.db.get_user_by_id(db_session, user_id)
         if not user:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError
 
         if user_data.email and user_data.email != user.email:
             existing_user = self.db.get_user_by_email(db_session, user_data.email)
             if existing_user:
-                raise EmailAlreadyExistsError("Email already in use")
+                raise EmailAlreadyExistsError
 
         try:
             updated_user = self.db.update_user(db_session, user, user_data)
@@ -50,7 +51,7 @@ class UserService:
         """Delete a user."""
         user = self.db.get_user_by_id(db_session, user_id)
         if not user:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError
 
         try:
             self.db.delete_user(db_session, user)

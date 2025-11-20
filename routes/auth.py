@@ -146,8 +146,9 @@ def verify(
     user = auth_service.verify_authentication(db_session, token)
 
     return AuthVerifyResponse(
-        authenticated=True,
-        user=AuthVerifyUser(
+        authenticated=user is not None,
+        user=user
+        and AuthVerifyUser(
             id=user.id,
             email=user.email,
             first_name=user.first_name,

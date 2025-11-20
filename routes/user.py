@@ -16,7 +16,7 @@ router = APIRouter(
     prefix="/users",
     tags=["users"],
     dependencies=[
-        Depends(get_authenticated_user),
+        Depends(get_authenticated_user),  # NOTE: This already gets the db_session
         Depends(get_user_service),
     ],
 )

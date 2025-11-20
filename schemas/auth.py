@@ -1,9 +1,11 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from uuid import UUID
+from typing import Optional
 
 from custom_types.enums import UserType
-from models.user import User
+
+from models import User
 
 
 class TokenPayload(BaseModel):
@@ -44,4 +46,4 @@ class AuthVerifyUser(BaseModel):
 
 class AuthVerifyResponse(BaseModel):
     authenticated: bool
-    user: AuthVerifyUser
+    user: Optional[AuthVerifyUser]

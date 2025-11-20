@@ -3,17 +3,17 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from sqlmodel import Session
 
-from models.user import User
+from models import User
+
 from database.user import UserDatabase
 from schemas.auth import TokenPayload, AuthRegisterRequest
-from services.password import PasswordService
 from custom_types.exceptions import (
-    UserNotFoundError,
     EmailAlreadyExistsError,
     InvalidCredentialsError,
     InvalidTokenError,
     RegistrationError,
     NotAuthenticatedError,
+    UserNotFoundError,
 )
 from custom_types.enums import TokenType
 from config.auth import (
@@ -22,6 +22,8 @@ from config.auth import (
     COOKIE_MAX_AGE_ACCESS,
     COOKIE_MAX_AGE_REFRESH,
 )
+
+from .password import PasswordService
 
 
 class AuthService:
@@ -68,14 +70,14 @@ class AuthService:
         """Register a new user."""
         existing_user = self.db.get_user_by_email(db_session, user_data.email)
         if existing_user:
-            raise EmailAlreadyExistsError("Email already in use")
+            raise EmailAlreadyExistsError
 
         hashed_password = PasswordService.hash_password(user_data.password)
 
         try:
             user = self.db.create_user(db_session, user_data, hashed_password)
         except Exception as e:
-            raise RegistrationError("Failed to register user") from e
+            raise RegistrationError from e
 
         return user
 
@@ -91,14 +93,14 @@ class AuthService:
         return user
 
     def verify_authentication(self, db_session: Session, token: str | None) -> User:
-        """Verify authentication token and return the authenticated user."""
+        """Verify authentication token and return the authenticated user or None if not authenticated."""
         if not token:
-            raise NotAuthenticatedError("Not authenticated")
+            raise NotAuthenticatedError
 
         payload = self._verify_token(token)
 
         user = self.db.get_user_by_id(db_session, UUID(payload.sub))
         if not user:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError
 
         return user
