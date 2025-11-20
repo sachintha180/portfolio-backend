@@ -245,3 +245,55 @@ def complex_function():
 - Only pass a `detail` parameter if you need a message that differs from the default
 - This reduces redundancy and keeps code cleaner
 - Default messages are defined in exception constructors with `detail: str = "default message"`
+
+---
+
+## Rule 12: Top-Down Development Approach
+
+**Principle:** Always build features top-down, starting from routes and working down to database operations. This ensures only necessary methods are implemented, reducing code bloat and technical debt.
+
+**Development Order:**
+
+1. **Routes Layer** (`routes/`): Start by defining routes with hypothetical service methods and schemas
+2. **Services Layer** (`services/`): Implement service methods with hypothetical database operations
+3. **Database Layer** (`database/`): Finally implement only the database methods actually needed
+
+**Examples:**
+
+- **Good:** Start with route `@router.post("/users")` calling `user_service.create_user()`, then implement `create_user()` calling `db.create_user()`, then implement `db.create_user()`
+- **Good:** Create schemas (`UserCreateRequest`, `UserCreateResponse`) as needed when defining routes
+- **Good:** Create exceptions (`UserNotFoundError`) as needed when implementing services
+- **Bad:** Building all database methods first, then services, then routes (bottom-up approach)
+- **Bad:** Implementing database methods that are never actually called by services
+
+**Implementation:**
+
+- Begin with route definitions and create placeholder service calls
+- Define request/response schemas as you need them in routes
+- Implement service methods to fulfill route requirements, creating placeholder database calls
+- Define custom exceptions in `custom_types/exceptions.py` as needed during service implementation
+- Finally implement only the database methods that services actually call
+- This approach ensures every method serves a purpose and reduces unnecessary code
+- If a method isn't called from the layer above, it shouldn't exist
+
+---
+
+## Rule 13: Route Prefix and Filename Consistency
+
+**Principle:** Route file names should be singular (e.g., `user.py`), while the `APIRouter` prefix must be plural (e.g., `/users`). This follows REST API conventions where endpoints are pluralized.
+
+**Examples:**
+
+- **Good:** File `routes/user.py` with `prefix="/users"`
+- **Good:** File `routes/auth.py` with `prefix="/auth"` (auth is already a collective noun)
+- **Good:** File `routes/lesson.py` with `prefix="/lessons"`
+- **Bad:** File `routes/users.py` with `prefix="/users"` (filename should be singular)
+- **Bad:** File `routes/user.py` with `prefix="/user"` (prefix should be plural)
+
+**Implementation:**
+
+- Route files use singular nouns: `user.py`, `lesson.py`, `post.py`
+- Router prefixes use plural nouns: `/users`, `/lessons`, `/posts`
+- Exceptions:
+  - Collective nouns like `auth` remain singular in both filename and prefix
+- This maintains consistency with REST API conventions where resource endpoints are pluralized

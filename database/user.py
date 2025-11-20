@@ -2,7 +2,7 @@ from typing import Optional
 from uuid import UUID
 from sqlmodel import Session, select
 
-from models.user import User
+from models import User
 from schemas.auth import AuthRegisterRequest
 from schemas.user import UserUpdateRequest
 

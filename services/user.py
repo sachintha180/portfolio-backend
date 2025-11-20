@@ -1,7 +1,8 @@
 from uuid import UUID
 from sqlmodel import Session
 
-from models.user import User
+from models import User
+
 from schemas.user import UserUpdateRequest
 from database.user import UserDatabase
 from custom_types.exceptions import (

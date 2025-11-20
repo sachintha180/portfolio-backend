@@ -4,10 +4,10 @@ from uuid import UUID
 from sqlmodel import Session
 from typing import Optional
 
-from models.user import User
+from models import User
+
 from database.user import UserDatabase
 from schemas.auth import TokenPayload, AuthRegisterRequest
-from services.password import PasswordService
 from custom_types.exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -21,6 +21,8 @@ from config.auth import (
     COOKIE_MAX_AGE_ACCESS,
     COOKIE_MAX_AGE_REFRESH,
 )
+
+from .password import PasswordService
 
 
 class AuthService:

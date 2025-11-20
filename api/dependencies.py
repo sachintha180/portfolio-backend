@@ -4,9 +4,11 @@ from typing import Optional
 from sqlmodel import Session
 
 from database.user import UserDatabase
+from database.syllabus import SyllabusDatabase
 from services.user import UserService
 from services.auth import AuthService
-from models.user import User
+from services.syllabus import SyllabusService
+from models import User
 from config.database import get_db_session
 from config.auth import ACCESS_TOKEN_COOKIE_NAME
 
@@ -29,6 +31,18 @@ def get_auth_service(
 ) -> AuthService:
     """Dependency factory for auth service."""
     return AuthService(db=db)
+
+
+def get_syllabus_db() -> SyllabusDatabase:
+    """Dependency factory for syllabus database."""
+    return SyllabusDatabase()
+
+
+def get_syllabus_service(
+    db: Annotated[SyllabusDatabase, Depends(get_syllabus_db)],
+) -> SyllabusService:
+    """Dependency factory for syllabus service."""
+    return SyllabusService(db=db)
 
 
 def get_authenticated_user(

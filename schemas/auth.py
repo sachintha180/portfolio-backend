@@ -4,7 +4,8 @@ from uuid import UUID
 from typing import Optional
 
 from custom_types.enums import UserType
-from models.user import User
+
+from models import User
 
 
 class TokenPayload(BaseModel):

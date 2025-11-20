@@ -2,7 +2,8 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 from custom_types.enums import UserType
-from models.user import User
+
+from models import User
 
 
 class UserUpdateRequest(BaseModel):

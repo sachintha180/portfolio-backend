@@ -47,3 +47,11 @@ class DatabaseError(HTTPException):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=detail,
         )
+
+
+class SyllabusNotFoundError(HTTPException):
+    def __init__(self, detail: str = "Syllabus not found"):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=detail,
+        )
