@@ -224,3 +224,24 @@ def complex_function():
 - Remove unused dependencies from function signatures if they're only needed for side effects (like authentication protection)
 - Router-level dependencies are perfect for authentication, authorization, and other shared checks
 - This reduces code repetition and follows DRY principles
+
+---
+
+## Rule 11: Exception Detail Messages
+
+**Principle:** Do not pass detail strings to exceptions if they match the default message defined in the exception class. Only pass a detail parameter when you need a custom message that differs from the default.
+
+**Examples:**
+
+- **Good:** `raise UserNotFoundError()` when the default message "User not found" is appropriate
+- **Good:** `raise EmailAlreadyExistsError()` when the default message "Email already in use" is appropriate
+- **Good:** `raise UserNotFoundError("User with ID 123 not found")` when you need a more specific message
+- **Bad:** `raise UserNotFoundError("User not found")` when it matches the default exactly
+- **Bad:** `raise EmailAlreadyExistsError("Email already in use")` when it matches the default exactly
+
+**Implementation:**
+
+- Check the exception class definition in `custom_types/exceptions.py` for the default detail message
+- Only pass a `detail` parameter if you need a message that differs from the default
+- This reduces redundancy and keeps code cleaner
+- Default messages are defined in exception constructors with `detail: str = "default message"`

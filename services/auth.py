@@ -2,18 +2,17 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from sqlmodel import Session
+from typing import Optional
 
 from models.user import User
 from database.user import UserDatabase
 from schemas.auth import TokenPayload, AuthRegisterRequest
 from services.password import PasswordService
 from custom_types.exceptions import (
-    UserNotFoundError,
     EmailAlreadyExistsError,
     InvalidCredentialsError,
     InvalidTokenError,
     RegistrationError,
-    NotAuthenticatedError,
 )
 from custom_types.enums import TokenType
 from config.auth import (
@@ -68,14 +67,14 @@ class AuthService:
         """Register a new user."""
         existing_user = self.db.get_user_by_email(db_session, user_data.email)
         if existing_user:
-            raise EmailAlreadyExistsError("Email already in use")
+            raise EmailAlreadyExistsError
 
         hashed_password = PasswordService.hash_password(user_data.password)
 
         try:
             user = self.db.create_user(db_session, user_data, hashed_password)
         except Exception as e:
-            raise RegistrationError("Failed to register user") from e
+            raise RegistrationError from e
 
         return user
 
@@ -90,15 +89,17 @@ class AuthService:
 
         return user
 
-    def verify_authentication(self, db_session: Session, token: str | None) -> User:
-        """Verify authentication token and return the authenticated user."""
+    def verify_authentication(
+        self, db_session: Session, token: str | None
+    ) -> Optional[User]:
+        """Verify authentication token and return the authenticated user or None if not authenticated."""
         if not token:
-            raise NotAuthenticatedError("Not authenticated")
+            return None
 
         payload = self._verify_token(token)
 
         user = self.db.get_user_by_id(db_session, UUID(payload.sub))
         if not user:
-            raise UserNotFoundError("User not found")
+            return None
 
         return user

@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi import Depends, Request
+from typing import Optional
 from sqlmodel import Session
 
 from database.user import UserDatabase
@@ -34,7 +35,7 @@ def get_authenticated_user(
     request: Request,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     db_session: Annotated[Session, Depends(get_db_session)],
-) -> User:
+) -> Optional[User]:
     """Dependency that verifies JWT token from HTTP-only cookie and returns the current authenticated user."""
     token = request.cookies.get(ACCESS_TOKEN_COOKIE_NAME)
     return auth_service.verify_authentication(db_session, token)
