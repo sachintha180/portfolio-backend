@@ -59,6 +59,7 @@ class AuthService:
             email=user.email,
             type=user.type,
             exp=datetime.now(timezone.utc) + timedelta(seconds=expiration_time),
+            token_type=token_type,
         )
         return jwt.encode(
             payload.model_dump(),
@@ -98,6 +99,23 @@ class AuthService:
             raise NotAuthenticatedError
 
         payload = self._verify_token(token)
+
+        user = self.db.get_user_by_id(db_session, UUID(payload.sub))
+        if not user:
+            raise UserNotFoundError
+
+        return user
+
+    def refresh_token(self, db_session: Session, token: str | None) -> User:
+        """Verify refresh token and return the authenticated user."""
+        if not token:
+            raise NotAuthenticatedError
+
+        payload = self._verify_token(token)
+
+        # Verify this is a refresh token (not an access token)
+        if payload.token_type != TokenType.REFRESH:
+            raise InvalidTokenError("Token is not a refresh token")
 
         user = self.db.get_user_by_id(db_session, UUID(payload.sub))
         if not user:

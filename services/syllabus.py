@@ -20,11 +20,12 @@ class SyllabusService:
         self.db = db
 
     def create_syllabus(
-        self, db_session: Session, syllabus_data: SyllabusCreateRequest
+        self, db_session: Session, user_id: UUID, syllabus_data: SyllabusCreateRequest
     ) -> Syllabus:
-        """Create a new syllabus."""
+        """Create a new syllabus and add it to the user's syllabus list."""
         try:
             syllabus = self.db.create_syllabus(db_session, syllabus_data)
+            self.db.create_user_syllabus(db_session, user_id, syllabus.id)
         except Exception as e:
             raise DatabaseError("Failed to create syllabus") from e
 
