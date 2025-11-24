@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Response, status, Depends
+from fastapi import APIRouter, Request, Response, status
 
 from schemas.auth import (
     AuthRegisterRequest,
@@ -7,6 +7,7 @@ from schemas.auth import (
     AuthLoginResponse,
     AuthVerifyUser,
     AuthVerifyResponse,
+    AuthRefreshResponse,
 )
 from custom_types.dependencies import AuthServiceDep, DBSessionDep
 from custom_types.enums import TokenType
@@ -19,16 +20,8 @@ from config.auth import (
     COOKIE_SECURE,
     COOKIE_SAME_SITE,
 )
-from api.dependencies import get_db_session, get_auth_service
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["auth"],
-    dependencies=[
-        Depends(get_db_session),
-        Depends(get_auth_service),
-    ],
-)
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post(
@@ -156,3 +149,35 @@ def verify(
             type=user.type,
         ),
     )
+
+
+@router.post(
+    "/refresh",
+    response_model=AuthRefreshResponse,
+    status_code=status.HTTP_200_OK,
+)
+def refresh(
+    request: Request,
+    auth_service: AuthServiceDep,
+    db_session: DBSessionDep,
+    response: Response,
+):
+    """Refresh the current user's access token using refresh token from HTTP-only cookie."""
+
+    refresh_token = request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)
+    user = auth_service.refresh_token(db_session, refresh_token)
+
+    access_token = auth_service.create_token(user, TokenType.ACCESS)
+
+    # Set HTTP-only cookie
+    response.set_cookie(
+        key=ACCESS_TOKEN_COOKIE_NAME,
+        value=access_token,
+        max_age=COOKIE_MAX_AGE_ACCESS,
+        httponly=COOKIE_HTTP_ONLY,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAME_SITE,
+        path="/",
+    )
+
+    return AuthRefreshResponse(user=user)

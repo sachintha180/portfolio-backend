@@ -1,25 +1,18 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
 from schemas.user import (
     UserUpdateRequest,
     UserGetResponse,
     UserUpdateResponse,
 )
-from custom_types.dependencies import DBSessionDep, UserServiceDep
-from api.dependencies import (
-    get_authenticated_user,
-    get_user_service,
+from custom_types.dependencies import (
+    AuthenticatedUserDep,
+    DBSessionDep,
+    UserServiceDep,
 )
 
-router = APIRouter(
-    prefix="/users",
-    tags=["users"],
-    dependencies=[
-        Depends(get_authenticated_user),  # NOTE: This already gets the db_session
-        Depends(get_user_service),
-    ],
-)
+router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get(
@@ -29,6 +22,7 @@ router = APIRouter(
 )
 def get_user(
     user_id: UUID,
+    _: AuthenticatedUserDep,
     user_service: UserServiceDep,
     db_session: DBSessionDep,
 ):
@@ -46,6 +40,7 @@ def get_user(
 def update_user(
     user_id: UUID,
     request_data: UserUpdateRequest,
+    _: AuthenticatedUserDep,
     user_service: UserServiceDep,
     db_session: DBSessionDep,
 ):
@@ -61,6 +56,7 @@ def update_user(
 )
 def delete_user(
     user_id: UUID,
+    _: AuthenticatedUserDep,
     user_service: UserServiceDep,
     db_session: DBSessionDep,
 ):
