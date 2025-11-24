@@ -11,7 +11,7 @@ from custom_types.exceptions import (
     DatabaseError,
 )
 
-# NOTE: In order to get back the latest data after CRUD operations, we need to refresh the session after the operation.
+# NOTE: In order to get back the latest data after CREATE and UPDATE operations, we need to refresh the session after the operation.
 #       Reference: https://sqlmodel.tiangolo.com/tutorial/automatic-id-none-refresh/#refresh-objects-explicitly
 
 
@@ -83,7 +83,6 @@ class SyllabusService:
 
         try:
             self.db.delete_syllabus(db_session, syllabus)
-            db_session.refresh(syllabus)
         except Exception as e:
             raise DatabaseError("Failed to delete syllabus") from e
 

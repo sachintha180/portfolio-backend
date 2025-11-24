@@ -56,7 +56,6 @@ class UserService:
 
         try:
             self.db.delete_user(db_session, user)
-            db_session.refresh(user)
         except Exception as e:
             raise DatabaseError("Failed to delete user") from e
 
