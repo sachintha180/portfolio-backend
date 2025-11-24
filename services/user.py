@@ -42,6 +42,7 @@ class UserService:
 
         try:
             updated_user = self.db.update_user(db_session, user, user_data)
+            db_session.refresh(updated_user)
         except Exception as e:
             raise DatabaseError("Failed to update user") from e
 
@@ -55,6 +56,7 @@ class UserService:
 
         try:
             self.db.delete_user(db_session, user)
+            db_session.refresh(user)
         except Exception as e:
             raise DatabaseError("Failed to delete user") from e
 

@@ -1,6 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 
 from models import UserSyllabus, Syllabus
 from schemas.syllabus import SyllabusCreateRequest, SyllabusUpdateRequest
@@ -39,10 +39,10 @@ class SyllabusDatabase:
     def get_all_syllabuses_by_user_id(
         self, db_session: Session, user_id: UUID
     ) -> List[Syllabus]:
-        """Get all syllabuses for a user."""
+        """Get all syllabuses for a user, sorted by the latest created first."""
         statement = (
             select(Syllabus).join(UserSyllabus).where(UserSyllabus.user_id == user_id)
-        )
+        ).order_by(desc(Syllabus.created_at))
         return list(db_session.exec(statement).all())
 
     def update_syllabus(

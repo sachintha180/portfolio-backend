@@ -11,6 +11,9 @@ from custom_types.exceptions import (
     DatabaseError,
 )
 
+# NOTE: In order to get back the latest data after CRUD operations, we need to refresh the session after the operation.
+#       Reference: https://sqlmodel.tiangolo.com/tutorial/automatic-id-none-refresh/#refresh-objects-explicitly
+
 
 class SyllabusService:
     """Service for syllabus-related business logic."""
@@ -26,6 +29,7 @@ class SyllabusService:
         try:
             syllabus = self.db.create_syllabus(db_session, syllabus_data)
             self.db.create_user_syllabus(db_session, user_id, syllabus.id)
+            db_session.refresh(syllabus)
         except Exception as e:
             raise DatabaseError("Failed to create syllabus") from e
 
@@ -42,7 +46,7 @@ class SyllabusService:
     def get_all_syllabuses_by_user_id(
         self, db_session: Session, user_id: UUID
     ) -> List[Syllabus]:
-        """Get all syllabuses for a user."""
+        """Get all syllabuses for a user, sorted by the latest created first."""
         try:
             syllabuses = self.db.get_all_syllabuses_by_user_id(db_session, user_id)
         except Exception as e:
@@ -65,6 +69,7 @@ class SyllabusService:
             updated_syllabus = self.db.update_syllabus(
                 db_session, syllabus, syllabus_data
             )
+            db_session.refresh(updated_syllabus)
         except Exception as e:
             raise DatabaseError("Failed to update syllabus") from e
 
@@ -78,6 +83,7 @@ class SyllabusService:
 
         try:
             self.db.delete_syllabus(db_session, syllabus)
+            db_session.refresh(syllabus)
         except Exception as e:
             raise DatabaseError("Failed to delete syllabus") from e
 

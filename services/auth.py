@@ -77,6 +77,7 @@ class AuthService:
 
         try:
             user = self.db.create_user(db_session, user_data, hashed_password)
+            db_session.refresh(user)
         except Exception as e:
             raise RegistrationError from e
 
