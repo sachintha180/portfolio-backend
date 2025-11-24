@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+import os
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
 # NOTE: Load environment variables before importing modules that use them
-load_dotenv(".env.local")
+if os.getenv("ENVIRONMENT", "development") == "development":
+    load_dotenv(".env.local")
 
 from fastapi import FastAPI
 from routes import api_router
 from config.database import create_db_and_tables
+from config.auth import CORS_ORIGINS, PORT, RELOAD
 
 
 @asynccontextmanager
@@ -27,7 +30,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,5 +45,5 @@ def index():
 
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=PORT, reload=RELOAD)
     # NOTE: When reload=True, the application instance must be assigned as a string in the format "<module>:<app>"
