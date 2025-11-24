@@ -204,26 +204,30 @@ def complex_function():
 
 ---
 
-## Rule 10: Router-Level Dependencies
+## Rule 10: Router-Level Dependencies Prohibition
 
-**Principle:** When all routes in a router share the same dependencies, use router-level dependencies instead of declaring them individually in each route function.
+**Principle:** Router-level dependencies (`dependencies=[Depends(...)]` in `APIRouter`) **MUST NOT** be used. Router-level dependencies do not inject return values into route functions, which causes dependency resolution conflicts and validation errors.
 
 **Examples:**
 
-- **Good:** Router with `dependencies=[Depends(get_authenticated_user), Depends(get_user_service)]` when all routes need authentication and user service
-- **Good:** Route handlers still declare dependencies as parameters if they need to use the resolved values
-- **Good:** Router-level dependencies handle side effects (like authentication checks) automatically
-- **Bad:** Declaring the same three dependencies in every route function when they're shared across all routes
-- **Bad:** Using router-level dependencies but still declaring unused dependencies in function signatures
+- **Good:** All dependencies declared as function parameters: `def route(authenticated_user: AuthenticatedUserDep, service: ServiceDep)`
+- **Good:** Each route explicitly declares its dependencies, making dependencies clear and injectable
+- **Good:** Unused dependencies replaced with underscore: `def route(_: AuthenticatedUserDep, service: ServiceDep)` when authentication is needed but user object isn't used
+- **Bad:** `router = APIRouter(dependencies=[Depends(get_authenticated_user)])` - return value not injected
+- **Bad:** Router-level dependency + function parameter for same dependency - causes 422 validation errors
+- **Bad:** Assuming router-level dependencies inject values into route functions
+- **Bad:** `def route(authenticated_user: AuthenticatedUserDep, ...)` when `authenticated_user` is never used in the function body (should be `_: AuthenticatedUserDep`)
 
 **Implementation:**
 
-- Use `dependencies` parameter in `APIRouter()` constructor when dependencies are shared across all routes
-- Router-level dependencies run automatically for all routes in that router
-- Still declare dependencies as function parameters if you need to use the resolved values
-- Remove unused dependencies from function signatures if they're only needed for side effects (like authentication protection)
-- Router-level dependencies are perfect for authentication, authorization, and other shared checks
-- This reduces code repetition and follows DRY principles
+- **Never** use `dependencies` parameter in `APIRouter()` constructor
+- Always declare dependencies as function parameters in route handlers
+- Each route must explicitly declare all dependencies it needs
+- If a dependency is required for side effects (like authentication checks) but its return value is not used in the function body, replace the parameter name with a single underscore: `_: AuthenticatedUserDep`, `_: DBSessionDep`, etc.
+- This ensures dependencies are properly injected and avoids FastAPI validation conflicts
+- Router-level dependencies only execute for side effects but don't inject return values
+- If you need the return value, you MUST declare it as a function parameter, making router-level dependency redundant
+- Using `_` clearly indicates the dependency is intentionally unused but required for side effects
 
 ---
 
@@ -278,7 +282,29 @@ def complex_function():
 
 ---
 
-## Rule 13: Route Prefix and Filename Consistency
+## Rule 13: Route Ordering
+
+**Principle:** Specific routes (literal paths) **MUST** be defined before parameterized routes (path parameters) in the same router. FastAPI matches routes in order, and if a parameterized route comes first, it will try to match specific paths as parameters, causing 422 validation errors.
+
+**Examples:**
+
+- **Good:** `/all` route defined before `/{syllabus_id}` route
+- **Good:** `/search` route defined before `/{id}` route
+- **Good:** `/me` route defined before `/{user_id}` route
+- **Bad:** `/{syllabus_id}` route defined before `/all` route - FastAPI tries to parse "all" as UUID → 422 error
+- **Bad:** `/{id}` route defined before `/search` route - FastAPI tries to parse "search" as parameter → validation error
+
+**Implementation:**
+
+- Always define specific/literal routes before parameterized routes
+- Order routes from most specific to least specific
+- Pattern: `/specific-path` → `/{parameter}` → `/{param1}/{param2}`
+- This prevents FastAPI from incorrectly matching specific paths as parameters
+- If you get 422 validation errors on specific routes, check route ordering first
+
+---
+
+## Rule 14: Route Prefix and Filename Consistency
 
 **Principle:** Route file names should be singular (e.g., `user.py`), while the `APIRouter` prefix must be plural (e.g., `/users`). This follows REST API conventions where endpoints are pluralized.
 

@@ -1,5 +1,7 @@
 from fastapi import HTTPException, status
 
+# NOTE: Strictly reserve 401 only for NotAuthenticatedError and InvalidTokenError (since it's used for refreshing access token)
+
 
 class UserNotFoundError(HTTPException):
     def __init__(self, detail: str = "User not found"):
@@ -20,7 +22,7 @@ class EmailAlreadyExistsError(HTTPException):
 class InvalidCredentialsError(HTTPException):
     def __init__(self, detail: str = "Invalid credentials"):
         super().__init__(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail=detail,
         )
 

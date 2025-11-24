@@ -3,8 +3,7 @@ from datetime import datetime
 from uuid import UUID
 from typing import Optional
 
-from custom_types.enums import UserType
-
+from custom_types.enums import UserType, TokenType
 from models import User
 
 
@@ -13,6 +12,7 @@ class TokenPayload(BaseModel):
     email: EmailStr
     type: UserType
     exp: datetime
+    token_type: TokenType
 
 
 class AuthLoginRequest(BaseModel):
@@ -47,3 +47,7 @@ class AuthVerifyUser(BaseModel):
 class AuthVerifyResponse(BaseModel):
     authenticated: bool
     user: Optional[AuthVerifyUser]
+
+
+class AuthRefreshResponse(BaseModel):
+    user: User
