@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import List
+from typing import List, Optional
 from uuid import UUID, uuid4
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import DateTime, func, UniqueConstraint, CheckConstraint
@@ -7,18 +7,26 @@ from pydantic import EmailStr
 
 from custom_types.enums import UserType, SubjectCode, SyllabusLevel, FileType
 
+# NOTE: The following are the established cascade deletes:
+# - Deleting user_syllabus -> deletes associated results
+# - Deleting syllabus -> deletes associated lessons and tests
+# - Deleting lesson -> deletes associated files
+# - Deleting test -> deletes associated results
+
 
 # NOTE: If you use sa_column here, created_at/updated_at columns will be instantiated and
 #       then SQLAlchemy will try to set the same column to several tables which is not allowed.
 class TimestampedModel(SQLModel):
-    created_at: datetime = Field(
+    created_at: Optional[datetime] = Field(
+        default=None,
         sa_type=DateTime(timezone=True),
         sa_column_kwargs={
             "server_default": func.now(),
             "nullable": False,
         },
     )
-    updated_at: datetime = Field(
+    updated_at: Optional[datetime] = Field(
+        default=None,
         sa_type=DateTime(timezone=True),
         sa_column_kwargs={
             "server_default": func.now(),
@@ -43,7 +51,9 @@ class UserSyllabus(TimestampedModel, table=True):
     syllabus_id: UUID = Field(foreign_key="syllabus.id", nullable=False)
 
     # Relationships
-    results: List["Result"] = Relationship(back_populates="user_syllabus")
+    results: List["Result"] = Relationship(
+        back_populates="user_syllabus", cascade_delete=True
+    )
 
 
 class User(TimestampedModel, table=True):
@@ -73,9 +83,11 @@ class Syllabus(TimestampedModel, table=True):
         back_populates="syllabuses", link_model=UserSyllabus
     )
 
-    lessons: List["Lesson"] = Relationship(back_populates="syllabus")
+    lessons: List["Lesson"] = Relationship(
+        back_populates="syllabus", cascade_delete=True
+    )
 
-    tests: List["Test"] = Relationship(back_populates="syllabus")
+    tests: List["Test"] = Relationship(back_populates="syllabus", cascade_delete=True)
 
 
 class Lesson(TimestampedModel, table=True):
@@ -88,7 +100,7 @@ class Lesson(TimestampedModel, table=True):
     syllabus_id: UUID = Field(foreign_key="syllabus.id", nullable=False)
     syllabus: "Syllabus" = Relationship(back_populates="lessons")
 
-    files: List["File"] = Relationship(back_populates="lesson")
+    files: List["File"] = Relationship(back_populates="lesson", cascade_delete=True)
 
 
 class File(TimestampedModel, table=True):
@@ -123,7 +135,7 @@ class Test(TimestampedModel, table=True):
     syllabus_id: UUID = Field(foreign_key="syllabus.id", nullable=False)
     syllabus: "Syllabus" = Relationship(back_populates="tests")
 
-    results: List["Result"] = Relationship(back_populates="test")
+    results: List["Result"] = Relationship(back_populates="test", cascade_delete=True)
 
 
 class Result(TimestampedModel, table=True):
