@@ -19,6 +19,16 @@ class SyllabusDatabase:
         db_session.refresh(syllabus)
         return syllabus
 
+    def create_user_syllabus(
+        self, db_session: Session, user_id: UUID, syllabus_id: UUID
+    ) -> UserSyllabus:
+        """Create a new user syllabus in the database."""
+        user_syllabus = UserSyllabus(user_id=user_id, syllabus_id=syllabus_id)
+        db_session.add(user_syllabus)
+        db_session.commit()
+        db_session.refresh(user_syllabus)
+        return user_syllabus
+
     def get_syllabus_by_id(
         self, db_session: Session, syllabus_id: UUID
     ) -> Optional[Syllabus]:
