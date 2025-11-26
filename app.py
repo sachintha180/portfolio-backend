@@ -1,17 +1,17 @@
+from config.environment import CORS_ORIGINS, ENVIRONMENT, PORT, RELOAD
+
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-import os
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
 # NOTE: Load environment variables before importing modules that use them
-if os.getenv("ENVIRONMENT", "development") == "development":
+if ENVIRONMENT == "development":
     load_dotenv(".env.local")
 
 from fastapi import FastAPI
 from routes import api_router
 from config.database import create_db_and_tables
-from config.auth import CORS_ORIGINS, PORT, RELOAD
 
 
 @asynccontextmanager
