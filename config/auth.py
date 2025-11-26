@@ -1,6 +1,5 @@
 import os
 
-# JWT configuration constants
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
@@ -14,11 +13,3 @@ COOKIE_HTTP_ONLY = True
 # NOTE: Set to True in production (requires HTTPS), False for local development
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
 COOKIE_SAME_SITE = "lax"
-
-# Environment configuration constants
-PORT = int(os.getenv("PORT", 8000))
-CORS_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
-]
-RELOAD = os.getenv("ENVIRONMENT", "development") == "development"
