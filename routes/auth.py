@@ -16,10 +16,8 @@ from config.auth import (
     REFRESH_TOKEN_COOKIE_NAME,
     COOKIE_MAX_AGE_ACCESS,
     COOKIE_MAX_AGE_REFRESH,
-    COOKIE_HTTP_ONLY,
-    COOKIE_SECURE,
-    COOKIE_SAME_SITE,
 )
+from config.environment import COOKIE_HTTP_ONLY, COOKIE_SECURE, COOKIE_SAME_SITE
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
