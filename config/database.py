@@ -4,6 +4,7 @@ from sqlmodel import SQLModel, Session, create_engine
 
 from .environment import ENVIRONMENT
 
+# Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")
@@ -11,7 +12,9 @@ if not DATABASE_URL:
 engine = create_engine(
     DATABASE_URL,
     echo=True,
-    connect_args={"sslmode": "require" if ENVIRONMENT == "production" else "allow",},
+    connect_args={
+        "sslmode": "require" if ENVIRONMENT == "production" else "allow",
+    },
 )
 
 
